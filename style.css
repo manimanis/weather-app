@@ -1,0 +1,483 @@
+/*
+ * @license
+ * Your First PWA Codelab (https://g.co/codelabs/pwa)
+ * Copyright 2019 Google Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  color: #444;
+  font-family: 'Helvetica', 'Verdana', sans-serif;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+html {
+  overflow: hidden;
+}
+
+body {
+  align-content: stretch;
+  align-items: stretch;
+  background: #ececec;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+}
+
+/**
+   * Header
+   */
+
+.header {
+  align-content: center;
+  align-items: stretch;
+  background: #4caf50;
+  box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 2px 9px 1px rgba(0, 0, 0, 0.12), 0 4px 2px -2px rgba(0, 0, 0, 0.2);
+  color: #fff;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  font-size: 20px;
+  height: 56px;
+  justify-content: flex-start;
+  padding: 16px 16px 0 16px;
+  position: fixed;
+  transition: transform 0.233s cubic-bezier(0, 0, 0.21, 1) 0.1s;
+  width: 100%;
+  will-change: transform;
+  z-index: 1000;
+}
+
+.header h1 {
+  flex: 1;
+  font-size: 20px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.header button {
+  border: none;
+  cursor: pointer;
+  height: 24px;
+  margin-right: 16px;
+  outline: none;
+  overflow: hidden;
+  text-indent: -30000px;
+  transition: opacity 0.333s cubic-bezier(0, 0, 0.21, 1);
+  width: 24px;
+}
+
+.header #butRefresh {
+  background: url(/images/refresh.svg) center center no-repeat;
+}
+
+.header #butInstall {
+  background: url(/images/install.svg) center center no-repeat;
+}
+
+.header #btn-settings {
+  background: url(/images/settings-line.svg) center center no-repeat;
+  width: 24px;
+  height: 24px;
+  background-size: contain;
+}
+
+.header .powered-by {
+  color: white;
+  font-size: 0.5em;
+  text-decoration: none;
+  display: block;
+}
+
+/**
+   * Loading spinner
+   */
+
+.card-spinner {
+  background-color: rgba(255, 255, 255, 0.8);
+  height: 100%;
+  margin-left: -16px;
+  margin-top: -16px;
+  position: absolute;
+  width: 100%;
+}
+
+.card-spinner svg {
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.card-spinner svg circle {
+  animation: line 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite, rotate 1.6s linear infinite;
+  box-sizing: border-box;
+  stroke: #3f51b5;
+  stroke-width: 3px;
+  transform-origin: 50%;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(450deg);
+  }
+}
+
+@keyframes line {
+  0% {
+    stroke-dasharray: 2, 85.964;
+    transform: rotate(0);
+  }
+  50% {
+    stroke-dasharray: 65.973, 21.9911;
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dasharray: 2, 85.964;
+    stroke-dashoffset: -65.973;
+    transform: rotate(90deg);
+  }
+}
+
+/**
+   * Icons
+   */
+
+.icon {
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.icon.add {
+  background-image: url("/images/add.svg");
+}
+
+.icon.clear {
+  background-image: url("/images/clear-day.svg");
+}
+
+.icon.rain {
+  background-image: url("/images/rain.svg");
+}
+
+.icon.snow {
+  background-image: url("/images/snow.svg");
+}
+
+.icon.sleet {
+  background-image: url("/images/sleet.svg");
+}
+
+.icon.wind {
+  background-image: url("/images/wind.svg");
+}
+
+.icon.fog, .icon.mist, .icon.smoke, .icon.haze, .icon.dust, .icon.sand, .icon.ash, .icon.squall {
+  background-image: url("/images/fog.svg");
+}
+
+.icon.clouds {
+  background-image: url("/images/cloudy.svg");
+}
+
+.icon.partly-cloudy-day {
+  background-image: url("/images/partly-cloudy-day.svg");
+}
+
+.icon.partly-cloudy-night {
+  background-image: url("/images/partly-cloudy-night.svg");
+}
+
+.icon.hail {
+  background-image: url("/images/hail.svg");
+}
+
+.icon.thunderstorm {
+  background-image: url("/images/thunderstorm.svg");
+}
+
+.icon.tornado {
+  background-image: url("/images/tornado.svg");
+}
+
+/**
+   * Main body
+   */
+
+.main {
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-top: 60px;
+}
+
+.main .fab {
+  background-color: #4caf50;
+  border-radius: 50%;
+  bottom: 1rem;
+  height: 56px;
+  padding: 12px;
+  position: fixed;
+  right: 1rem;
+  width: 56px;
+  z-index: 1000;
+  border: none;
+}
+
+.main .fab .icon {
+  display: inline-block;
+  height: 100%;
+  width: 100%;
+}
+
+/**
+   * Add dialog
+   */
+
+#addDialogContainer {
+  background: rgba(0, 0, 0, 0.57);
+  height: 100%;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  transition: opacity 0.333s cubic-bezier(0, 0, 0.21, 1);
+  width: 100%;
+  will-change: opacity;
+}
+
+#addDialogContainer.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dialog {
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.24), 0 14px 28px rgba(0, 0, 0, 0.48);
+  left: 50%;
+  min-width: 280px;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) translateY(30px);
+  transition: transform 0.333s cubic-bezier(0, 0, 0.21, 1) 0.05s;
+}
+
+.dialog>div {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.dialog-title {
+  font-size: 1.25em;
+  padding-top: 20px;
+}
+
+.dialog-body {
+  padding-bottom: 24px;
+  padding-top: 20px;
+}
+
+.dialog-body select {
+  width: 100%;
+}
+
+.dialog-buttons {
+  float: right;
+  padding-bottom: 16px;
+  padding-right: 17px !important;
+}
+
+.dialog .button {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+/**
+   * Weather forecast card
+   */
+
+.weather-card {
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
+  margin: 10px;
+  padding: 10px;
+  position: relative;
+}
+
+.weather-card .remove-city {
+  background-color: transparent;
+  border: none;
+  float: right;
+  font-size: x-large;
+}
+
+.weather-card .location {
+  font-size: 1.5em;
+  margin: 10px 0;
+}
+
+.weather-card .date, .weather-card .description {
+  font-size: 0.8em;
+}
+
+.weather-card .current {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.weather-card .current .icon {
+  height: 64px;
+  width: 64px;
+}
+
+.weather-card .current .visual {
+  display: flex;
+  font-size: 2.5em;
+  margin-right: 10px;
+}
+
+.weather-card .current .visual .scale {
+  font-size: 0.5em;
+  vertical-align: super;
+}
+
+.weather-card .current .visual, .weather-card .current .description {
+  width: calc(50% - 5px);
+}
+
+.weather-card .current .description {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.weather-card .current .description>div {
+  margin: 4px 0;
+  width: 50%;
+}
+
+.weather-card .current .description .label {
+  color: #666;
+  display: block;
+}
+
+.weather-card .future {
+  display: flex;
+}
+
+.weather-card .future .oneday {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 2px 0;
+  width: 14.2%;
+}
+
+.weather-card .future .oneday>div {
+  text-align: center;
+  width: 100%;
+}
+
+.weather-card .future .oneday .icon {
+  height: 32px;
+  width: 32px;
+  margin: auto;
+}
+
+.weather-card .future .oneday .temp-high, .weather-card .future .oneday .temp-low {
+  display: inline-block
+}
+
+.weather-card .future .oneday .temp-low {
+  color: #666;
+}
+
+.form .field {
+  margin: 10px 0 5px;
+}
+
+.form .field label, .form .field small {
+  display: block;
+  margin: 5px 0;
+}
+
+.form input[type="text"] {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: #333 solid 1px;
+}
+
+.form button {
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+}
+
+.form .errors {
+  list-style: none;
+  font-size: 0.8em;
+  color: red;
+  padding: 0;
+}
+
+@media screen and (min-width: 500px) {
+  .weather-card {
+    font-size: 1.5em;
+  }
+  .weather-card .current .icon {
+    height: 96px;
+    width: 96px;
+  }
+  .weather-card .future .oneday .icon {
+    height: 48px;
+    width: 48px;
+  }
+}
+
+@media screen and (min-width: 750px) {
+  .weather-card {
+    width: calc(750px - 20px);
+    font-size: 2.25em;
+    margin: 10px auto;
+  }
+  .weather-card .current .icon {
+    height: 144px;
+    width: 144px;
+  }
+  .weather-card .future .oneday .icon {
+    height: 72px;
+    width: 72px;
+  }
+}
