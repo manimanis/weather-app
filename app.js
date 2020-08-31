@@ -1,5 +1,5 @@
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall';
-let API_KEY; // 'fcc24a52fc9929d76caf741a3d08107f';
+let API_KEY;
 const APIKEY_KEY = 'API_KEY';
 const LOCATIONS_KEY = 'locations';
 const FORECASTS_KEY = 'forecasts';
@@ -15,11 +15,11 @@ class ApplicationSettings {
     this.locations = JSON.parse(storage.getItem(LOCATIONS_KEY)) || [];
     this.apiKeys = JSON.parse(storage.getItem(APIKEY_KEY)) || {
       weatherKey: {
-        key: '', // fcc24a52fc9929d76caf741a3d08107f
+        key: '',
         valid: false
       },
       locationKey: {
-        key: '', // ac1306e11d84fe
+        key: '',
         valid: false
       }
     };
