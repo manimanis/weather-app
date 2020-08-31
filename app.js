@@ -3,6 +3,7 @@ let API_KEY;
 const APIKEY_KEY = 'API_KEY';
 const LOCATIONS_KEY = 'locations';
 const FORECASTS_KEY = 'forecasts';
+const SETTINGS_KEY = 'settings';
 
 
 class ApplicationSettings {
@@ -27,6 +28,9 @@ class ApplicationSettings {
     for (let key in this.forecasts) {
       this.forecasts[key] = new WeatherForecast(this.forecasts[key], false);
     }
+    this.settings = JSON.parse(storage.getItem(SETTINGS_KEY)) || {
+      units: 'metric'
+    };
   }
 
   save() {
@@ -34,6 +38,19 @@ class ApplicationSettings {
     storage.setItem(LOCATIONS_KEY, JSON.stringify(this.locations));
     storage.setItem(APIKEY_KEY, JSON.stringify(this.apiKeys));
     storage.setItem(FORECASTS_KEY, JSON.stringify(this.forecasts));
+    storage.setItem(SETTINGS_KEY, JSON.stringify(this.settings));
+  }
+
+  getMiscSettings(field) {
+    if (!field) {
+      return this.settings;
+    }
+    return this.settings[field];
+  }
+
+  setMiscSettings(field, fieldValue) {
+    this.settings[field] = fieldValue;
+    return this;
   }
 
   //**************************************************************************
@@ -204,6 +221,7 @@ class ApplicationSettings {
 
 class WeatherForecastItem {
   constructor(obj = {}, fromNetwork = true) {
+    this.units = obj.units;
     if (fromNetwork) {
       this.date = new Date(obj.dt * 1000);
       this.sunrise = new Date(obj.sunrise * 1000);
@@ -217,7 +235,11 @@ class WeatherForecastItem {
       this.feels_like = Math.round(obj.feels_like);
       this.pressure = obj.pressure;
       this.humidity = obj.humidity;
-      this.wind_speed = Math.round(obj.wind_speed * 3.6);
+      if (obj.units == 'metric') {
+        this.wind_speed = Math.round(obj.wind_speed * 3.6);
+      } else {
+        this.wind_speed = Math.round(obj.wind_speed);
+      }
       this.wind_deg = obj.wind_deg;
       this.weather_id = obj.weather[0].id;
       this.weather_main = obj.weather[0].main;
@@ -250,13 +272,20 @@ class WeatherForecast {
     this.longitude = obj.lon;
     this.latitude = obj.lat;
     this.timezone = obj.timezone;
+    this.units = obj.units;
     if (fromNetwork) {
       this.timezone_utc = Math.floor(obj.timezone_offset / 3600);
     } else {
       this.timezone_utc = obj.timezone_utc;
     }
-    this.current = new WeatherForecastItem(obj.current, fromNetwork);
-    this.daily = obj.daily.map(day => new WeatherForecastItem(day, fromNetwork));
+    this.current = new WeatherForecastItem({
+      units: this.units,
+      ...obj.current
+    }, fromNetwork);
+    this.daily = obj.daily.map(day => new WeatherForecastItem({
+      units: this.units,
+      ...day
+    }, fromNetwork));
   }
 }
 
@@ -284,14 +313,40 @@ class ForecastCards {
   }
 
   fetchFromNetwork(location) {
-    return fetch(`${BASE_URL}?lon=${location.longitude}&lat=${location.latitude}&exclude=hourly,minutely&appid=${this.settings.getWeatherApiKey()}&units=metric`)
+    return fetch(`${BASE_URL}?lon=${location.longitude}&lat=${location.latitude}&exclude=hourly,minutely&appid=${this.settings.getWeatherApiKey()}&units=${this.settings.getMiscSettings('units')}`)
       .then(response => response.json())
       .then(data => {
         if (data.cod && data.cod !== 200) {
           throw new Error(data.message);
           return;
         }
-        return new WeatherForecast({ cityName: location.cityName, ...data });
+        return new WeatherForecast({
+          units: this.settings.getMiscSettings('units'),
+          cityName: location.cityName,
+          ...data
+        });
+      });
+  }
+
+  /**
+   * Refresh all cards content from network
+   */
+  refreshAllCards() {
+    this.cards.forEach((card, index) => this.refreshCardData(index));
+  }
+
+  /**
+   * Refresh card content from network
+   * @param {number} index 
+   */
+  refreshCardData(index) {
+    const location = this.settings.getLocation(index);
+    const card = this.cards[index];
+    this.fetchFromNetwork(location)
+      .then(forecast => {
+        this.settings.addForecast(location.cityName, forecast);
+        this.settings.save();
+        this.renderCard(card, forecast);
       });
   }
 
@@ -362,10 +417,14 @@ class ForecastCards {
       .className = `icon ${weather.current.weather_main.toLowerCase()}`;
     card.querySelector('.current .temperature .value')
       .textContent = weather.current.temp;
+    card.querySelector('.current .temperature .scale')
+      .textContent = weather.units === 'metric' ? '°C' : '°F';
     card.querySelector('.current .humidity .value')
       .textContent = weather.current.humidity;
     card.querySelector('.current .wind .value')
       .textContent = weather.current.wind_speed;
+    card.querySelector('.current .wind .scale')
+      .textContent = weather.units === 'metric' ? 'km/h' : 'mph';
     card.querySelector('.current .wind .direction')
       .textContent = weather.current.wind_deg;
     const sunrise = weather.current.sunrise.toLocaleTimeString("en-US", {
@@ -468,6 +527,7 @@ class SettingsCard {
     this.template = document.querySelector('#settings-input');
     this.inpWeatherKey = this.template.querySelector('#api-key');
     this.inpLocationKey = this.template.querySelector('#lociq-api-key');
+    this.inpUnits = this.template.querySelector('#units');
     this.formElem = this.template.querySelector('form');
     this.formErrors = new FormErrors(this.formElem.querySelector('.errors'));
     this.submitHandler = () => { };
@@ -483,6 +543,7 @@ class SettingsCard {
   loadSettings() {
     this.inpWeatherKey.value = this.settings.getWeatherApiKey();
     this.inpLocationKey.value = this.settings.getLocationApiKey();
+    this.inpUnits.value = this.settings.getMiscSettings('units');
     return this;
   }
 
@@ -490,6 +551,7 @@ class SettingsCard {
     this.settings
       .setWeatherApiKey(this.inpWeatherKey.value)
       .setLocationApiKey(this.inpLocationKey.value)
+      .setMiscSettings('units', this.inpUnits.value)
       .save();
     return this;
   }
@@ -628,6 +690,7 @@ settingsCard.onSubmit(e => {
     })
     .then(() => {
       settingsCard.hide();
+      forecastCards.refreshAllCards();
     })
     .catch(err => settingsCard.formErrors.addError(err));
 });
