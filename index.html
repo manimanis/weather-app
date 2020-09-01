@@ -10,11 +10,16 @@
   <link rel="stylesheet" type="text/css" href="style.css">
   <link rel="icon" href="/images/favicon.ico" type="image/x-icon" />
 
-  <!-- CODELAB: Add link rel manifest -->
-  <!-- CODELAB: Add iOS meta tags and icons -->
-  <!-- CODELAB: Add description here -->
-  <!-- CODELAB: Add meta theme-color -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Weather PWA">
+  <link rel="apple-touch-icon" href="/images/icons/icon-152x152.png">
 
+  <meta name="description" content="Weather Application">
+  
+  <meta name="theme-color" content="#4caf50" />
 </head>
 
 <body>
@@ -212,7 +217,14 @@
   <script src="app.js"></script>
   <!-- CODELAB: Add the install script here -->
   <script>
-    // CODELAB: Register service worker.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => {
+            console.log('Service worker registered.', reg);
+          });
+      });
+    }
   </script>
 
 </body>
