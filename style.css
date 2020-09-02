@@ -71,15 +71,15 @@ body {
 }
 
 .header #butRefresh {
-  background: url(/images/refresh.svg) center center no-repeat;
+  background: url(images/refresh.svg) center center no-repeat;
 }
 
 .header #butInstall {
-  background: url(/images/install.svg) center center no-repeat;
+  background: url(images/install.svg) center center no-repeat;
 }
 
 .header #btn-settings {
-  background: url(/images/settings-line.svg) center center no-repeat;
+  background: url(images/settings-line.svg) center center no-repeat;
   width: 24px;
   height: 24px;
   background-size: contain;
@@ -155,55 +155,55 @@ body {
 }
 
 .icon.add {
-  background-image: url("/images/add.svg");
+  background-image: url("images/add.svg");
 }
 
 .icon.clear {
-  background-image: url("/images/clear-day.svg");
+  background-image: url("images/clear-day.svg");
 }
 
 .icon.rain {
-  background-image: url("/images/rain.svg");
+  background-image: url("images/rain.svg");
 }
 
 .icon.snow {
-  background-image: url("/images/snow.svg");
+  background-image: url("images/snow.svg");
 }
 
 .icon.sleet {
-  background-image: url("/images/sleet.svg");
+  background-image: url("images/sleet.svg");
 }
 
 .icon.wind {
-  background-image: url("/images/wind.svg");
+  background-image: url("images/wind.svg");
 }
 
 .icon.fog, .icon.mist, .icon.smoke, .icon.haze, .icon.dust, .icon.sand, .icon.ash, .icon.squall {
-  background-image: url("/images/fog.svg");
+  background-image: url("images/fog.svg");
 }
 
 .icon.clouds {
-  background-image: url("/images/cloudy.svg");
+  background-image: url("images/cloudy.svg");
 }
 
 .icon.partly-cloudy-day {
-  background-image: url("/images/partly-cloudy-day.svg");
+  background-image: url("images/partly-cloudy-day.svg");
 }
 
 .icon.partly-cloudy-night {
-  background-image: url("/images/partly-cloudy-night.svg");
+  background-image: url("images/partly-cloudy-night.svg");
 }
 
 .icon.hail {
-  background-image: url("/images/hail.svg");
+  background-image: url("images/hail.svg");
 }
 
 .icon.thunderstorm {
-  background-image: url("/images/thunderstorm.svg");
+  background-image: url("images/thunderstorm.svg");
 }
 
 .icon.tornado {
-  background-image: url("/images/tornado.svg");
+  background-image: url("images/tornado.svg");
 }
 
 /**
