@@ -412,7 +412,7 @@ body {
   margin: 5px 0;
 }
 
-.form input[type="text"] {
+.form input[type="text"], .form input[type="search"], .form select {
   box-sizing: border-box;
   width: 100%;
   padding: 10px;
@@ -432,6 +432,16 @@ body {
   font-size: 0.8em;
   color: red;
   padding: 0;
+}
+
+#cityname {
+  width: calc(100% - 92px);
+  margin-right: 5px;
+}
+
+#btn-search-cityname {
+  width: 80px;
+  padding: 10px;
 }
 
 @media screen and (min-width: 500px) {

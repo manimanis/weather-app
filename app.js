@@ -1,6 +1,6 @@
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall';
-let API_KEY;
-const APIKEY_KEY = 'API_KEY';
+
+const WEATHER_API_KEY = 'WEATHER_API_KEY';
 const LOCATIONS_KEY = 'locations';
 const FORECASTS_KEY = 'forecasts';
 const SETTINGS_KEY = 'settings';
@@ -14,12 +14,8 @@ class ApplicationSettings {
   load() {
     const storage = window.localStorage;
     this.locations = JSON.parse(storage.getItem(LOCATIONS_KEY)) || [];
-    this.apiKeys = JSON.parse(storage.getItem(APIKEY_KEY)) || {
+    this.apiKeys = JSON.parse(storage.getItem(WEATHER_API_KEY)) || {
       weatherKey: {
-        key: '',
-        valid: false
-      },
-      locationKey: {
         key: '',
         valid: false
       }
@@ -36,7 +32,7 @@ class ApplicationSettings {
   save() {
     const storage = window.localStorage;
     storage.setItem(LOCATIONS_KEY, JSON.stringify(this.locations));
-    storage.setItem(APIKEY_KEY, JSON.stringify(this.apiKeys));
+    storage.setItem(WEATHER_API_KEY, JSON.stringify(this.apiKeys));
     storage.setItem(FORECASTS_KEY, JSON.stringify(this.forecasts));
     storage.setItem(SETTINGS_KEY, JSON.stringify(this.settings));
   }
@@ -194,28 +190,9 @@ class ApplicationSettings {
     return this.apiKeys.weatherKey.valid;
   }
 
-  //////////////////////////////////
-  setLocationApiKey(apiKey) {
-    this.apiKeys.locationKey.key = apiKey;
-    return this;
-  }
-
-  getLocationApiKey() {
-    return this.apiKeys.locationKey.key;
-  }
-
-  setLocationApiKeyValid(valid) {
-    this.apiKeys.locationKey.valid = valid;
-    return this;
-  }
-
-  isLocationApiKeyValid() {
-    return this.apiKeys.locationKey.valid;
-  }
-
   ///////////////////////////////////////
   isValidConfig() {
-    return this.isLocationApiKeyValid() && this.isWeatherApiKeyValid();
+    return this.isWeatherApiKeyValid();
   }
 }
 
@@ -490,15 +467,18 @@ function fetchDataFromNetwork(cityName, longitude, latitude) {
     });
 }
 
-function fetchLocationFromNetwork(longitude, latitude) {
-  const baseUrl = 'https://us1.locationiq.com/v1/reverse.php?format=json';
-  return fetch(`${baseUrl}&key=${settings.getLocationApiKey()}&lat=${latitude}&lon=${longitude}`)
+function fetchCitynameFromNetwork(cityName) {
+  const baseUrl = 'https://api.openweathermap.org/data/2.5/weather';
+  return fetch(`${baseUrl}?q=${encodeURIComponent(cityName)}&appid=${settings.getWeatherApiKey()}`)
     .then(response => response.json())
     .then(data => {
-      if (data.error) {
-        throw new Error(`LocationIQ API Key, ${data.error}`);
+      if (data.coord) {
+        return {
+          cityName: cityName,
+          longitude: data.coord.lon,
+          latitude: data.coord.lat
+        };
       }
-      return data;
     });
 }
 
@@ -526,7 +506,6 @@ class SettingsCard {
     this.settings = settings;
     this.template = document.querySelector('#settings-input');
     this.inpWeatherKey = this.template.querySelector('#api-key');
-    this.inpLocationKey = this.template.querySelector('#lociq-api-key');
     this.inpUnits = this.template.querySelector('#units');
     this.formElem = this.template.querySelector('form');
     this.formErrors = new FormErrors(this.formElem.querySelector('.errors'));
@@ -542,7 +521,6 @@ class SettingsCard {
 
   loadSettings() {
     this.inpWeatherKey.value = this.settings.getWeatherApiKey();
-    this.inpLocationKey.value = this.settings.getLocationApiKey();
     this.inpUnits.value = this.settings.getMiscSettings('units');
     return this;
   }
@@ -550,7 +528,6 @@ class SettingsCard {
   saveSettings() {
     this.settings
       .setWeatherApiKey(this.inpWeatherKey.value)
-      .setLocationApiKey(this.inpLocationKey.value)
       .setMiscSettings('units', this.inpUnits.value)
       .save();
     return this;
@@ -579,6 +556,7 @@ class NewLocationTemplate {
   constructor() {
     this.template = document.querySelector('#new-location-template');
     this.formErrors = new FormErrors(this.template.querySelector('.errors'));
+    this.searchBtn = this.template.querySelector('#btn-search-cityname');
     this.saveBtn = this.template.querySelector('#save-city');
     this.cancelBtn = this.template.querySelector('#cancel-city');
     this.cityNameInput = this.template.querySelector('#cityname');
@@ -587,6 +565,16 @@ class NewLocationTemplate {
     this.saveCallback = () => true;
     this.cancelCallback = () => { };
 
+    this.searchBtn.addEventListener('click', e => {
+      e.preventDefault();
+      this.formErrors.clear();
+      fetchCitynameFromNetwork(this.cityNameInput.value)
+        .then(data => {
+          this.longInput.value = data.longitude;
+          this.latInput.value = data.latitude;
+        })
+        .catch(err => this.formErrors.addError(err));
+    });
     this.saveBtn.addEventListener('click', e => {
       e.preventDefault();
       if (this.saveCallback(this.getLocation(), this)) {
@@ -618,9 +606,9 @@ class NewLocationTemplate {
   }
 
   setLocation(location = {}) {
-    this.cityNameInput.value = location.cityName || 'Hammam Sousse';
-    this.longInput.value = location.longitude || 10.6;
-    this.latInput.value = location.latitude || 35.86;
+    this.cityNameInput.value = location.cityName || '';
+    this.longInput.value = location.longitude || 0.0;
+    this.latInput.value = location.latitude || 0.0;
     return this;
   }
 
@@ -681,12 +669,6 @@ settingsCard.onSubmit(e => {
       settings
         .setWeatherApiKeyValid(true)
         .save();
-      return verifyLocationApiKey();
-    })
-    .then(() => {
-      settings
-        .setLocationApiKeyValid(true)
-        .save();
     })
     .then(() => {
       settingsCard.hide();
@@ -701,17 +683,6 @@ settingsCard.onSubmit(e => {
 function verifyWeatherApiKey() {
   return new Promise((resolve, reject) => {
     return fetchDataFromNetwork('Hammam Sousse', 10.6, 35.86)
-      .then(() => resolve(true))
-      .catch(err => reject(err));
-  });
-}
-
-/**
- * Verify the validity of the location API Key
- */
-function verifyLocationApiKey() {
-  return new Promise((resolve, reject) => {
-    return fetchLocationFromNetwork(10.6, 35.86)
       .then(() => resolve(true))
       .catch(err => reject(err));
   });
