@@ -214,6 +214,7 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   padding-top: 60px;
+  width: 100%;
 }
 
 .main .fab {
