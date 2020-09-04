@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Weather Application</title>
   <meta name="codelab" content="your-first-pwa-v3">
-  <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="stylesheet" type="text/css" href="css/style.css">
   <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
 
   <link rel="manifest" href="manifest.json">
@@ -74,7 +74,7 @@
         <div class="fields">
           <div class="field">
             <label for="cityname">City name</label>
-            <input type="search" id="cityname" placeholder="Example: Hammam Sousse">
+            <input type="search" id="cityname" placeholder="Example: Hammam Sousse, TN">
             <button id="btn-search-cityname">Search</button>
           </div>
           <div class="field">
@@ -210,8 +210,8 @@
     </div>
   </main>
 
-  <script src="app.js"></script>
-  <script src="install.js"></script>
+  <script src="scripts/app.js"></script>
+  <script src="scripts/install.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

@@ -472,6 +472,10 @@ function fetchCitynameFromNetwork(cityName) {
   return fetch(`${baseUrl}?q=${encodeURIComponent(cityName)}&appid=${settings.getWeatherApiKey()}`)
     .then(response => response.json())
     .then(data => {
+      // console.log(data.cod, Math.floor(+data.cod / 100));
+      if (data.cod && Math.floor(+data.cod / 100) === 4) {
+        throw new Error(data.message);
+      }
       if (data.coord) {
         return {
           cityName: cityName,
@@ -485,9 +489,11 @@ function fetchCitynameFromNetwork(cityName) {
 class FormErrors {
   constructor(formErrElem) {
     this.formErrElem = formErrElem;
+    this._hasErrors = false;
   }
 
   clear() {
+    this._hasErrors = false;
     this.formErrElem.innerHTML = '';
   }
 
@@ -495,6 +501,11 @@ class FormErrors {
     const li = document.createElement('li');
     li.textContent = errorMessage;
     this.formErrElem.appendChild(li);
+    this._hasErrors = true;
+  }
+
+  hasErrors() {
+    return this._hasErrors;
   }
 }
 
@@ -568,18 +579,27 @@ class NewLocationTemplate {
     this.searchBtn.addEventListener('click', e => {
       e.preventDefault();
       this.formErrors.clear();
-      fetchCitynameFromNetwork(this.cityNameInput.value)
-        .then(data => {
-          this.longInput.value = data.longitude;
-          this.latInput.value = data.latitude;
-        })
+      if (!this.isValidCityName(this.cityNameInput.value)) {
+        this.formErrors.addError('Invalid city name format');
+        return;
+      }
+      this.findByCityName(this.cityNameInput.value)
+        .then(location => this.setLocation(location))
         .catch(err => this.formErrors.addError(err));
     });
     this.saveBtn.addEventListener('click', e => {
       e.preventDefault();
-      if (this.saveCallback(this.getLocation(), this)) {
-        this.hide();
+      if (!this.isValidLocation()) {
+        return;
       }
+      this.findByCityName(this.cityNameInput.value)
+        .then(location => {
+          this.setLocation(location);
+          if (this.saveCallback(this.getLocation(), this)) {
+            this.hide();
+          }
+        })
+        .catch(err => this.formErrors.addError(err));
     });
     this.cancelBtn.addEventListener('click', e => {
       e.preventDefault();
@@ -620,8 +640,72 @@ class NewLocationTemplate {
     };
   }
 
+  isValidLocation() {
+    this.formErrors.clear();
+    if (!this.isValidCityName(this.cityNameInput.value)) {
+      this.formErrors.addError('City name is invalid!');
+    }
+    if (!this.isValidLatitude(this.latInput.value)) {
+      this.formErrors.addError('Latitude is invalid, should be [-90, 90]!');
+    }
+    if (!this.isValidLongitude(this.longInput.value)) {
+      this.formErrors.addError('Longitude is invalid, should be [-180, 180]!');
+    }
+    // if (!this.formErrors.hasErrors()) {
+    //   fetchCitynameFromNetwork(this.cityNameInput.value)
+    //     .then(data => {
+    //       this.longInput.value = data.longitude;
+    //       this.latInput.value = data.latitude;
+    //     })
+    //     .catch(err => this.formErrors.addError(err));
+    // }
+    return !this.formErrors.hasErrors();
+  }
+
+  findByCityName(cityName) {
+    return fetchCitynameFromNetwork(this.cityNameInput.value)
+      .then(data => {
+        return {
+          cityName: cityName,
+          longitude: data.longitude,
+          latitude: data.latitude
+        };
+      });
+  }
+
+  isValidCityName(cityName) {
+    if (!this.cityNameRegEx) {
+      this.cityNameRegEx = /^([a-zA-Z]+[a-zA-Z ]*[,]{1}\s*[a-zA-Z]+|[a-zA-Z]+[a-zA-Z ]*)$/;
+    }
+    return this.cityNameRegEx.test(cityName);
+  }
+
+  isValidNumber(number) {
+    if (!this.floatRegEx) {
+      this.floatRegEx = /^[-+]?([0-9]+\.[0-9]+|[0-9]+)$/;
+    }
+    return this.floatRegEx.test(number);
+  }
+
+  isValidLongitude(longitude) {
+    return this.isValidNumber(longitude) && +longitude >= -180 && +longitude <= 180;
+  }
+
+  isValidLatitude(latitude) {
+    return this.isValidNumber(latitude) && +latitude >= -90 && +latitude <= 90;
+  }
+
   isVisible() {
     return !this.template.hasAttribute('hidden');
+  }
+
+  canCancel(cancelState = true) {
+    if (!cancelState) {
+      this.cancelBtn.setAttribute('hidden', '');
+    } else {
+      this.cancelBtn.removeAttribute('hidden');
+    }
+    return this;
   }
 
   show() {
@@ -673,6 +757,10 @@ settingsCard.onSubmit(e => {
     .then(() => {
       settingsCard.hide();
       forecastCards.refreshAllCards();
+
+      if (settings.getLocationsCount() === 0) {
+        addLocationHandler();
+      }
     })
     .catch(err => settingsCard.formErrors.addError(err));
 });
@@ -689,12 +777,18 @@ function verifyWeatherApiKey() {
 }
 
 function addLocationHandler() {
+  if (!settings.isValidConfig()) {
+    alert('You cannot add any location until you configure the OpenWeatherMap API key.');
+    return;
+  }
+
   if (!locationTemplate.isVisible()) {
     forecastCards.hideAll();
     locationTemplate
       .setMode('add')
       .setLocation()
       .show()
+      .canCancel(settings.getLocationsCount() !== 0)
       .onCancel(() => {
         forecastCards.showAll();
       })

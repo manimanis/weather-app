@@ -6,13 +6,14 @@ const DATA_CACHE_NAME = 'data-cache-v2';
 
 // Add list of files to cache here.
 const FILES_TO_CACHE = [
-  "app.js",
+  "scripts/app.js",
   "images/add.svg",
   "images/clear-day.svg",
   "images/clear-night.svg",
   "images/cloudy.svg",
   "images/fog.svg",
   "images/hail.svg",
+  "images/install.svg",
   "images/partly-cloudy-day.svg",
   "images/partly-cloudy-night.svg",
   "images/rain.svg",
@@ -24,8 +25,8 @@ const FILES_TO_CACHE = [
   "images/tornado.svg",
   "images/wind.svg",
   "index.html",
-  "install.js",
-  "style.css"
+  "scripts/install.js",
+  "css/style.css"
 ];
 
 self.addEventListener('install', (evt) => {
