@@ -58,26 +58,28 @@ self.addEventListener('activate', (evt) => {
 });
 
 self.addEventListener('fetch', (evt) => {
+  const url = new URL(evt.request.url);
+  if (url.host === 'api.openweathermap.org') {
+    console.log('[Service Worker] Fetch (data)', evt.request.url);
+    evt.respondWith(
+      caches.open(DATA_CACHE_NAME).then((cache) => {
+        console.log('Fetch from network');
+        return fetch(evt.request)
+          .then((response) => {
+            // If the response was good, clone it and store it in the cache.
+            if (response.status === 200) {
+              cache.put(evt.request.url, response.clone());
+            }
+            return response;
+          }).catch((err) => {
+            console.log('Fallback to cache');
+            // Network request failed, try to get it from the cache.
+            return cache.match(evt.request);
+          });
+      }));
+    return;
+  }
   console.log('[ServiceWorker] Fetch', evt.request.url);
-  // // Add fetch event handler here
-  // if (evt.request.url.includes('/forecast/')) {
-  //   console.log('[Service Worker] Fetch (data)', evt.request.url);
-  //   evt.respondWith(
-  //     caches.open(DATA_CACHE_NAME).then((cache) => {
-  //       return fetch(evt.request)
-  //         .then((response) => {
-  //           // If the response was good, clone it and store it in the cache.
-  //           if (response.status === 200) {
-  //             cache.put(evt.request.url, response.clone());
-  //           }
-  //           return response;
-  //         }).catch((err) => {
-  //           // Network request failed, try to get it from the cache.
-  //           return cache.match(evt.request);
-  //         });
-  //     }));
-  //   return;
-  // }
   evt.respondWith(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.match(evt.request)
